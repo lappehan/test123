@@ -1,0 +1,44 @@
+---
+- name: Setup OS
+  include_tasks: "setup-{{ ansible_os_family }}-family.yml"
+
+- name: Create dependency directories
+  file:
+    name: '{{ item }}'
+    state: directory
+  with_items:
+    - /etc/systemd/system/nginx.service.d
+    - /etc/nginx/stream
+
+- name: Copy custom config to systemd
+  template:
+    src: custom.conf
+    dest: /etc/systemd/system/nginx.service.d
+
+- name: Copy nginx configuration file
+  template:
+    src: nginx.conf
+    dest: /etc/nginx/nginx.conf
+    owner: root
+    group: root
+    backup: yes
+
+- name: Delete default virtual host
+  file:
+    path: /etc/nginx/conf.d/default.conf
+    state: absent
+
+- name: Copy stream configuration files
+  template:
+    src: '{{ item }}'
+    dest: /etc/nginx/stream
+  with_items:
+    - k8s-ing-http.conf
+    - k8s-ing-https.conf
+
+- name: Restarting service nginx
+  systemd:
+    name: nginx
+    state: restarted
+    daemon_reload: yes
+    enabled: yes

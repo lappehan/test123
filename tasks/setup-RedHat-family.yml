@@ -1,0 +1,10 @@
+---
+- name: Copy nginx repository
+  template:
+    src: nginx.repo
+    dest: /etc/yum.repos.d/nginx.repo
+
+- name: Install nginx package
+  yum:
+    name: nginx
+    state: present
